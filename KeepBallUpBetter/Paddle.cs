@@ -12,8 +12,8 @@ namespace KeepBallUpBetter
     internal class Paddle
     {
         private const bool USE_AI = false;
-        private const float MAX_VELOCITY_GAIN = 800.0f;
-        private const float DEFAULT_FRICTION = 0.98f;
+        private const float MAX_VELOCITY_GAIN = 650.0f;
+        private const float DEFAULT_FRICTION = 0.35f;
         private const float MIN_VELOCITY_THRESHOLD = 0.01f;
 
         public Vector2f Position { get; set; }
@@ -55,7 +55,7 @@ namespace KeepBallUpBetter
             var posDelta = Direction * Velocity;
             var newPos = Position + posDelta * deltaTime;
 
-            Velocity *= Friction;
+            Velocity -= (1.0f/Friction) * Velocity * deltaTime;
             if (Math.Abs(Velocity) < MIN_VELOCITY_THRESHOLD)
                 Velocity = 0.0f;
 
