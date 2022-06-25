@@ -19,8 +19,6 @@ namespace KeepBallUpBetter
         private const int DEFAULT_SEED = 1337;
 
         private Font _defaultFont;
-        private float _fps;
-        private volatile float _tps;
 
         private Arena _arena;
         private Arena _arena2;
@@ -66,8 +64,6 @@ namespace KeepBallUpBetter
 
         public override void Update(float deltaTime)
         {
-            //GameWindow.DispatchEvents();
-            _tps = 1.0f / (deltaTime / TimeMultiplier);
             _mousePos = GameWindow.MapPixelToCoords(Mouse.GetPosition(GameWindow));
 
             if (Keyboard.IsKeyPressed(Keyboard.Key.Escape))
@@ -85,7 +81,6 @@ namespace KeepBallUpBetter
 
         public override void Draw(float deltaTime)
         {
-            _fps = 1.0f / (deltaTime / TimeMultiplier);
             GameWindow.Clear();
 
             _arena.Draw(GameWindow, deltaTime);
@@ -93,7 +88,7 @@ namespace KeepBallUpBetter
                 _arena2.Draw(GameWindow, deltaTime);
             DrawDebugCollisionLines();
 
-            Print($"{_fps:0.00}fps\n{_tps:0.00}tps", 4.0f, 4.0f, 8);
+            Print($"{FPS:0.00}fps\n{TPS:0.00}tps", 4.0f, 4.0f, 8);
             //Print($"GameTime: {GameTime:0.00}", 4.0f, 16.0f);
             //Print($"[{_mousePos.X:0};{_mousePos.Y:0}]", 8.0f, 16.0f);
             GameWindow.Display();
