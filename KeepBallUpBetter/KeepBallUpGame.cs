@@ -13,17 +13,18 @@ namespace KeepBallUpBetter
     {
         private const uint DEFAULT_FONT_SIZE = 12;
         private const float ARENA_BORDER_SIZE = 32.0f;
+        // TODO this should be an amount of arena instead
         private const bool SPLIT_SCREEN = false;
 
         private const int DEFAULT_SEED = 1337;
 
         private Font _defaultFont;
         private float _fps;
+        private volatile float _tps;
 
         private Arena _arena;
         private Arena _arena2;
 
-        private Random _random;
         private Vector2f _mousePos;
         private bool _mouseLeftPressed;
         private bool _mouseRightPressed;
@@ -37,20 +38,21 @@ namespace KeepBallUpBetter
         private Vector2f? _lineCollision;
 
         public KeepBallUpGame(RenderWindow window) : base(window) { }
-        public KeepBallUpGame(RenderWindow window, uint targetFPS) : base(window, targetFPS) { }
+        public KeepBallUpGame(RenderWindow window, uint targetFPS, uint targetTPS) : base(window, targetFPS, targetTPS) { }
 
         public override void Initialize()
         {
             if (SPLIT_SCREEN)
             {
-                _arena = new Arena(this, new Vector2f(ARENA_BORDER_SIZE, ARENA_BORDER_SIZE), new Vector2f(GameWindow.DefaultView.Size.X, GameWindow.DefaultView.Size.Y / 2.0f) - new Vector2f(ARENA_BORDER_SIZE, ARENA_BORDER_SIZE) * 2.0f);
-                _arena2 = new Arena(this, new Vector2f(ARENA_BORDER_SIZE, ARENA_BORDER_SIZE + GameWindow.DefaultView.Size.Y / 2.0f), new Vector2f(GameWindow.DefaultView.Size.X, GameWindow.DefaultView.Size.Y / 2.0f) - new Vector2f(ARENA_BORDER_SIZE, ARENA_BORDER_SIZE) * 2.0f);
+                _arena = new Arena(this, new Vector2f(ARENA_BORDER_SIZE, ARENA_BORDER_SIZE / 2.0f), new Vector2f(GameWindow.DefaultView.Size.X, GameWindow.DefaultView.Size.Y / 2.0f) - new Vector2f(ARENA_BORDER_SIZE, ARENA_BORDER_SIZE / 2.0f) * 2.0f);
+                _arena2 = new Arena(this, new Vector2f(ARENA_BORDER_SIZE, ARENA_BORDER_SIZE / 2.0f + GameWindow.DefaultView.Size.Y / 2.0f), new Vector2f(GameWindow.DefaultView.Size.X, GameWindow.DefaultView.Size.Y / 2.0f) - new Vector2f(ARENA_BORDER_SIZE, ARENA_BORDER_SIZE / 2.0f) * 2.0f);
             }
             else
                 _arena = new Arena(this, new Vector2f(ARENA_BORDER_SIZE, ARENA_BORDER_SIZE), GameWindow.DefaultView.Size - new Vector2f(ARENA_BORDER_SIZE, ARENA_BORDER_SIZE) * 2.0f);
 
             RandomManager.Seed = DEFAULT_SEED;
-            _random = RandomManager.GetRandomInstance();
+
+            //TimeMultiplier = 4.0f;
 
             Console.WriteLine("Initialized");
         }
@@ -64,8 +66,8 @@ namespace KeepBallUpBetter
 
         public override void Update(float deltaTime)
         {
-            GameWindow.DispatchEvents();
-            _fps = 1.0f / deltaTime;
+            //GameWindow.DispatchEvents();
+            _tps = 1.0f / (deltaTime / TimeMultiplier);
             _mousePos = GameWindow.MapPixelToCoords(Mouse.GetPosition(GameWindow));
 
             if (Keyboard.IsKeyPressed(Keyboard.Key.Escape))
@@ -83,6 +85,7 @@ namespace KeepBallUpBetter
 
         public override void Draw(float deltaTime)
         {
+            _fps = 1.0f / (deltaTime / TimeMultiplier);
             GameWindow.Clear();
 
             _arena.Draw(GameWindow, deltaTime);
@@ -90,7 +93,8 @@ namespace KeepBallUpBetter
                 _arena2.Draw(GameWindow, deltaTime);
             DrawDebugCollisionLines();
 
-            Print($"{_fps:0.00}fps", 4.0f, 4.0f, 8);
+            Print($"{_fps:0.00}fps\n{_tps:0.00}tps", 4.0f, 4.0f, 8);
+            //Print($"GameTime: {GameTime:0.00}", 4.0f, 16.0f);
             //Print($"[{_mousePos.X:0};{_mousePos.Y:0}]", 8.0f, 16.0f);
             GameWindow.Display();
         }
@@ -205,16 +209,17 @@ namespace KeepBallUpBetter
 
         #endregion
 
-        public void Print(string str, float x, float y, uint size = DEFAULT_FONT_SIZE)
+        public void Print(string str, float x, float y, uint size = DEFAULT_FONT_SIZE, Color? color = null)
         {
-            Print(str, x, y, _defaultFont, size);
+            Print(str, x, y, _defaultFont, size, color);
         }
 
-        public void Print(string str, float x, float y, Font font, uint size = DEFAULT_FONT_SIZE)
+        public void Print(string str, float x, float y, Font font, uint size = DEFAULT_FONT_SIZE, Color? color = null)
         {
             var text = new Text(str, font, size)
             {
-                Position = new Vector2f(x, y)
+                Position = new Vector2f(x, y),
+                FillColor = color.HasValue ? color.Value : Color.White
             };
 
             GameWindow.Draw(text);

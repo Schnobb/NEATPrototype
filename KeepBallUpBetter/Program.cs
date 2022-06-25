@@ -9,7 +9,7 @@ namespace KeepBallUpBetter
         static void Main(string[] args)
         {
             var window = new RenderWindow(new VideoMode(960, 540), "Keep The Ball Up!");
-            var game = new KeepBallUpGame(window, 144);
+            var game = new KeepBallUpGame(window, 144, 200);
             window.Closed += (sender, e) => { game.IsRunning = false; window.Close(); };
             //window.KeyPressed += (sender, e) => { if (e.Code == Keyboard.Key.Escape) { window.Close(); } };
 

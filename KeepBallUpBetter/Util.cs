@@ -36,7 +36,6 @@ namespace KeepBallUpBetter
             b /= denominator;
 
             if (a >= 0.0f && a <= 1.0f && b >= 0.0f && b <= 1.0f)
-                // TODO: verify that they should both use "a"
                 return new Vector2f(line1Start.X + a * (line1End.X - line1Start.X), line1Start.Y + a * (line1End.Y - line1Start.Y));
             else
                 return null;

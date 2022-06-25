@@ -24,6 +24,8 @@ namespace KeepBallUpBetter
         public float MaxGravityTimer { get; set; }
         public float GravityTimerThreshold { get; set; }
 
+        public float RoundTime { get; set; }
+
         public int Lives { get; set; }
         public int MaxLives { get; set; }
 
@@ -57,6 +59,7 @@ namespace KeepBallUpBetter
         {
             Gravity = 0;
             GravityTimer = 0;
+            RoundTime = 0;
 
             var ballDir = Util.RotateVector2f(new Vector2f(0.0f, 1.0f), RandomManager.GetNextFloat() * 2.0f * (float)Math.PI);
             //ballDir = new Vector2f(0.0f, 1.0f);
@@ -76,6 +79,7 @@ namespace KeepBallUpBetter
 
         public void Update(float deltaTime)
         {
+            RoundTime += deltaTime;
             GravityTimer += deltaTime;
             if (GravityTimer > GravityTimerThreshold)
                 Gravity = Math.Clamp(((GravityTimer - GravityTimerThreshold) / MaxGravityTimer) * MaxGravity, 0.0f, MaxGravity);
@@ -98,7 +102,7 @@ namespace KeepBallUpBetter
             Ball.Draw(window, deltaTime);
             Paddle.Draw(window, deltaTime);
 
-            Parent.Print($"SCORE: {Score}\nLIVES: {Lives}", Position.X + 8.0f, Position.Y + 8.0f, 14);
+            Parent.Print($"SCORE: {Score}\nLIVES: {Lives}\nTIME: {RoundTime:0.00}", Position.X + 8.0f, Position.Y + 8.0f, 14);
             //Parent.Print($"Gravity Timer: {GravityTimer}\nCurrent Gravity: {Gravity}", Position.X + 8.0f, Position.Y + 32.0f, 12);
         }
     }
