@@ -10,11 +10,12 @@ namespace KeepBallUpBetter
 {
     internal class Arena
     {
-        // TODO random direction change
         // TODO velocity variation?
 
         public Vector2f Position { get; set; }
         public Vector2f Size { get; set; }
+        public Color Color { get; set; } = new Color(32, 32, 32);
+
         public Ball Ball { get; set; }
         public Paddle Paddle { get; set; }
 
@@ -23,6 +24,11 @@ namespace KeepBallUpBetter
         public float GravityTimer { get; set; }
         public float MaxGravityTimer { get; set; }
         public float GravityTimerThreshold { get; set; }
+
+        public float RandomChangeTimer { get; set; }
+        public float CurrentMaxRandomChangeTimer { get; set; }
+        public float BaseMaxRandomChangeTimer { get; set; } = 4.0f;
+        public float MaxRandomChangeTimerVariation { get; set; } = 0.5f;
 
         public float RoundTime { get; set; }
 
@@ -60,12 +66,20 @@ namespace KeepBallUpBetter
             Gravity = 0;
             GravityTimer = 0;
             RoundTime = 0;
+            ResetRandomChangeTimer();
 
-            var ballDir = Util.RotateVector2f(new Vector2f(0.0f, 1.0f), RandomManager.GetNextFloat() * 2.0f * (float)Math.PI);
-            //ballDir = new Vector2f(0.0f, 1.0f);
-
+            var ballDir = new Vector2f(0.0f, 1.0f);
+            //ballDir = ballDir.Rotate((float)Math.PI / 4.5f);
             Ball = new Ball(Size / 2.0f, ballDir, 600.0f, 8.0f, Color.Red, this);
+            Ball.RandomizeDirection();
+
             Paddle = new Paddle(new Vector2f(Size.X / 2.0f - 40.0f, Size.Y - Size.Y / 10.0f - 8.0f), new Vector2f(80.0f, 16.0f), new Color(0, 175, 0), this);
+        }
+
+        public void ResetRandomChangeTimer()
+        {
+            RandomChangeTimer = 0;
+            CurrentMaxRandomChangeTimer = BaseMaxRandomChangeTimer + MaxRandomChangeTimerVariation * BaseMaxRandomChangeTimer * RandomManager.GetNextFullFloat();
         }
 
         public void Dead()
@@ -86,6 +100,13 @@ namespace KeepBallUpBetter
             else
                 Gravity = 0;
 
+            RandomChangeTimer += deltaTime;
+            if (RandomChangeTimer > CurrentMaxRandomChangeTimer)
+            {
+                Ball.RandomizeDirection();
+                ResetRandomChangeTimer();
+            }
+
             Paddle.Update(deltaTime);
             Ball.Update(deltaTime);
         }
@@ -95,7 +116,7 @@ namespace KeepBallUpBetter
             var shape = new RectangleShape(Size)
             {
                 Position = Position,
-                FillColor = new Color(32, 32, 32)
+                FillColor = Color
             };
             window.Draw(shape);
 

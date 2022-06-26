@@ -50,7 +50,7 @@ namespace KeepBallUpBetter
 
             RandomManager.Seed = DEFAULT_SEED;
 
-            //TimeMultiplier = 4.0f;
+            //TimeMultiplier = 0.1f;
 
             Console.WriteLine("Initialized");
         }
@@ -68,6 +68,9 @@ namespace KeepBallUpBetter
 
             if (Keyboard.IsKeyPressed(Keyboard.Key.Escape))
                 IsRunning = false;
+
+            if (Keyboard.IsKeyPressed(Keyboard.Key.Space))
+                _arena.ResetAll();
 
             UpdateDebugCollisionLines();
             _arena.Update(deltaTime);
@@ -133,8 +136,7 @@ namespace KeepBallUpBetter
                 return;
             }
 
-            // TODO check for AABB collision first, figure out how to draw a rectangle around both lines properly
-            _lineCollision = Util.lineIntersection(_line1Start.Value, _line1End.Value, _line2Start.Value, _line2End.Value);
+            _lineCollision = Util.LineIntersection(_line1Start.Value, _line1End.Value, _line2Start.Value, _line2End.Value);
         }
 
         private void DrawDebugCollisionLines()
@@ -233,6 +235,11 @@ namespace KeepBallUpBetter
                     line[i].Color = color.Value;
 
             GameWindow.Draw(line, PrimitiveType.Lines);
+        }
+
+        public void DrawLine(Line line, Color? color = null)
+        {
+            DrawLine(line.Start, line.End, color);
         }
     }
 }
