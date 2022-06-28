@@ -7,25 +7,26 @@ namespace NEAT
 {
     public class NEAT
     {
+        private const int MAX_ACTIVATE_TRIES = 20;
+
         // This is a global counter of new genes (connections)
         // Innovation is used in crossover gene alignment
         public static int LatestInnovation = 0;
-
-        public int MAX_ACTIVATE_TRIES = 20;
 
         public double MaxWeight { get; set; } = 4.0;
         public double MaxWeightShift { get; set; } = 0.5;
         public double SigmoidCoefficient { get; set; } = 2.0;
 
-        public int SensorCount;
-        public int OutputCount;
+        public int SensorCount { get; set; }
+        public int OutputCount { get; set; }
 
-        // GENOME
-        public List<Node> Nodes;
-        public List<Connection> Connections;
-        // ---
+        #region Genome
+        // TODO traits
+        public List<Node> Nodes { get; set; }
+        public List<Connection> Connections { get; set; }
+        #endregion
 
-        public double Fitness;
+        public double Fitness { get; set; }
 
         private Dictionary<int, List<Connection>> _reverseLookupTable;
 
@@ -35,7 +36,7 @@ namespace NEAT
         {
             SensorCount = 0;
             OutputCount = 0;
-            Fitness = 0;
+            Fitness = -1.0;
 
             Nodes = new List<Node>();
             Connections = new List<Connection>();
@@ -46,7 +47,7 @@ namespace NEAT
         {
             SensorCount = sensorCount;
             OutputCount = outputCount;
-            Fitness = 0;
+            Fitness = -1.0;
 
             Nodes = new List<Node>();
             Connections = new List<Connection>();
@@ -86,76 +87,78 @@ namespace NEAT
         public NEAT Crossover(NEAT other)
         {
             // TODO move all the innovation/connection mapping and alignment stuff in CompareGenome()
-            var newConnections = new List<Connection>();
-            var newNodes = new HashSet<Node>();
+            //var newConnections = new List<Connection>();
+            //var newNodes = new HashSet<Node>();
 
-            foreach (var node in Nodes)
-                if (node.Type != NodeType.Hidden)
-                    newNodes.Add(node);
+            //foreach (var node in Nodes)
+            //    if (node.Type != NodeType.Hidden)
+            //        newNodes.Add(node);
 
-            var innovationListAll = new SortedSet<int>();
-            var innovationDictSelf = new Dictionary<int, Connection>();
-            var innovationDictOther = new Dictionary<int, Connection>();
+            //var innovationListAll = new SortedSet<int>();
+            //var innovationDictSelf = new Dictionary<int, Connection>();
+            //var innovationDictOther = new Dictionary<int, Connection>();
 
-            int maxInnovSelf = -1;
-            int maxInnovOther = -1;
+            //int maxInnovSelf = -1;
+            //int maxInnovOther = -1;
 
-            foreach (var connection in Connections)
-            {
-                innovationListAll.Add(connection.Innovation);
-                innovationDictSelf.Add(connection.Innovation, connection);
-                if (connection.Innovation > maxInnovSelf)
-                    maxInnovSelf = connection.Innovation;
-            }
+            //foreach (var connection in Connections)
+            //{
+            //    innovationListAll.Add(connection.Innovation);
+            //    innovationDictSelf.Add(connection.Innovation, connection);
+            //    if (connection.Innovation > maxInnovSelf)
+            //        maxInnovSelf = connection.Innovation;
+            //}
 
-            foreach (var connection in other.Connections)
-            {
-                innovationListAll.Add(connection.Innovation);
-                innovationDictOther.Add(connection.Innovation, connection);
-                if (connection.Innovation > maxInnovOther)
-                    maxInnovOther = connection.Innovation;
-            }
+            //foreach (var connection in other.Connections)
+            //{
+            //    innovationListAll.Add(connection.Innovation);
+            //    innovationDictOther.Add(connection.Innovation, connection);
+            //    if (connection.Innovation > maxInnovOther)
+            //        maxInnovOther = connection.Innovation;
+            //}
 
-            // TODO newConnections is populated here
-            foreach (var innovation in innovationListAll)
-            {
-                if (innovation > maxInnovSelf)
-                {
-                    // TODO excess genes, check fitness
-                }
-                else if (innovation > maxInnovOther)
-                {
-                    // TODO excess genes, check fitness
-                }
-                else if (innovationDictSelf.ContainsKey(innovation) && innovationDictOther.ContainsKey(innovation))
-                {
-                    // TODO shared genes, check fitness
-                }
-                else
-                {
-                    // TODO disjoint genes, check fitness
-                }
-            }
+            //// TODO newConnections is populated here
+            //foreach (var innovation in innovationListAll)
+            //{
+            //    if (innovation > maxInnovSelf)
+            //    {
+            //        // TODO excess genes, check fitness
+            //    }
+            //    else if (innovation > maxInnovOther)
+            //    {
+            //        // TODO excess genes, check fitness
+            //    }
+            //    else if (innovationDictSelf.ContainsKey(innovation) && innovationDictOther.ContainsKey(innovation))
+            //    {
+            //        // TODO shared genes, check fitness
+            //    }
+            //    else
+            //    {
+            //        // TODO disjoint genes, check fitness
+            //    }
+            //}
 
-            // Add hidden nodes to newNodes
-            foreach (var connection in newConnections)
-            {
-                if (connection.Source.Type == NodeType.Hidden)
-                    newNodes.Add(connection.Source);
-                if (connection.Target.Type == NodeType.Hidden)
-                    newNodes.Add(connection.Target);
-            }
+            //// Add hidden nodes to newNodes
+            //foreach (var connection in newConnections)
+            //{
+            //    if (connection.Source.Type == NodeType.Hidden)
+            //        newNodes.Add(connection.Source);
+            //    if (connection.Target.Type == NodeType.Hidden)
+            //        newNodes.Add(connection.Target);
+            //}
 
-            var newNEAT = new NEAT()
-            {
-                SensorCount = SensorCount,
-                OutputCount = OutputCount,
-                Nodes = newNodes.ToList(),
-                Connections = newConnections
-            };
+            //var newNEAT = new NEAT()
+            //{
+            //    SensorCount = SensorCount,
+            //    OutputCount = OutputCount,
+            //    Nodes = newNodes.ToList(),
+            //    Connections = newConnections
+            //};
 
-            newNEAT.RecalculateReverseLookupTable();
-            return newNEAT;
+            //newNEAT.RecalculateReverseLookupTable();
+            //return newNEAT;
+
+            throw new NotImplementedException();
         }
 
         #endregion
@@ -214,7 +217,7 @@ namespace NEAT
                     else if (rand < 0.9)
                         MutateShiftWeight(random);
                     else if (rand < 0.98)
-                        MutateWeight(random);
+                        MutateNewWeight(random);
                     else
                         MutateAddNode(random);
                 }
@@ -299,24 +302,31 @@ namespace NEAT
 
             RecalculateReverseLookupTable();
         }
-        public void MutateWeight(Random random)
-        {
-            // TODO use gaussian distribution
-            var weight = random.NextDouble() * MaxWeight * 2.0 - MaxWeight;
-            Connections[random.Next(Connections.Count)].Weight = weight;
 
-            RecalculateReverseLookupTable();
+        public void MutateWeights(Random random)
+        {
+            // TODO go through all connections and either don't touch them, do a MutateShiftWeight(), or MutateNewWeight()
         }
 
-        public void MutateShiftWeight(Random random)
+        public void MutateNewWeight(Random random, Connection connection = null)
         {
+            if (connection == null)
+                connection = Connections[random.Next(Connections.Count)];
+
+            // TODO use gaussian distribution
+            var weight = random.NextDouble() * MaxWeight * 2.0 - MaxWeight;
+            connection.Weight = weight;
+        }
+
+        public void MutateShiftWeight(Random random, Connection connection = null)
+        {
+            if (connection == null)
+                connection = Connections[random.Next(Connections.Count)];
+
             // TODO use gaussian distribution
             var weightShift = random.NextDouble() * MaxWeightShift * 2.0 - MaxWeightShift;
-            var con = Connections[random.Next(Connections.Count)];
-            var newWeight = Math.Clamp(con.Weight + weightShift, -MaxWeight, MaxWeight);
-            con.Weight = newWeight;
-
-            RecalculateReverseLookupTable();
+            var newWeight = Math.Clamp(connection.Weight + weightShift, -MaxWeight, MaxWeight);
+            connection.Weight = newWeight;
         }
 
         #endregion
@@ -400,16 +410,16 @@ namespace NEAT
             }
         }
 
-        private double ComputeNode(int nodeIndex)
-        {
-            var currentNode = Nodes[nodeIndex];
-            double value = 0.0;
+        //private double ComputeNode(int nodeIndex)
+        //{
+        //    var currentNode = Nodes[nodeIndex];
+        //    double value = 0.0;
 
-            foreach (var connection in _reverseLookupTable[currentNode.ID])
-                value += connection.Source.Value * connection.Weight;
+        //    foreach (var connection in _reverseLookupTable[currentNode.ID])
+        //        value += connection.Source.Value * connection.Weight;
 
-            return Sigmoid(value);
-        }
+        //    return Sigmoid(value);
+        //}
 
         private double Sigmoid(double x)
         {

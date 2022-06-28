@@ -92,7 +92,7 @@ namespace KeepBallUp
 
             for (int i = 0; i < BatchSize - topAllTime.Count - topLastBatch.Count; i++)
             {
-                var newNEAT = new NEAT.NEAT(0, SensorCount, OutputCount);
+                var newNEAT = new NEAT.NEAT(SensorCount, OutputCount);
                 newNEAT.MutationRandom(_random, NewNEATMutationCount);
                 newBatch.Add(newNEAT);
             }

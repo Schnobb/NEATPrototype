@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace NEAT
 {
@@ -11,13 +12,15 @@ namespace NEAT
 
         public List<Species> Species { get; set; }
 
+        public int BatchSize { get; set; }
         public int SensorCount { get; set; }
         public int OutputCount { get; set; }
 
-        public Genus() : this(0, 0) { }
+        public Genus() : this(0, 0, 0) { }
 
-        public Genus(int sensorCount, int outputCount)
+        public Genus(int batchSize, int sensorCount, int outputCount)
         {
+            BatchSize = batchSize;
             SensorCount = sensorCount;
             OutputCount = outputCount;
             Species = new List<Species>();
@@ -37,18 +40,24 @@ namespace NEAT
             Species.Add(new Species(this, neat));
         }
 
-        public void Generate(Random random, int neatCount = 1)
+        public List<NEAT> GenerateNewBatch(Random random)
         {
-            for (int i = 0; i < neatCount; i++)
+            var newBatch = new List<NEAT>();
+            for (int i = 0; i < BatchSize; i++)
             {
                 var neat = new NEAT(this);
                 neat.MutationRandom(random, GenerateMaxMutations);
                 AddToSpecies(neat);
+                newBatch.Add(neat);
             }
+
+            return newBatch;
         }
 
-        public void CrossoverSpecies(Species species, int top = 3, int offspringPerCross = 3)
+        public List<NEAT> CrossoverSpecies(Random random, Species species, int top = 3, int offspringPerCross = 3)
         {
+            // TODO instead of offspringPerCross it should be based on BatchSize
+            // TODO remove all NEATs that are not yet evaluated (fitness < 0)
             // TODO elect a superchamp from the top and clone it a couple times, keep one original and mutate the other clones
             // TODO cross top x together and mutate
             // TODO what to do when species is not big enough? clone and mutate?
@@ -56,11 +65,14 @@ namespace NEAT
             throw new NotImplementedException();
         }
 
-        public void CrossoverAllSpecies(int top = 3, int offspringPerCross = 3)
+        public List<NEAT> CrossoverAllSpecies(Random random, int top = 3, int offspringPerCross = 3)
         {
             // TODO chance to crossover across species
+            var newBatch = new List<NEAT>();
             foreach (var species in Species)
-                CrossoverSpecies(species, top, offspringPerCross);
+                newBatch.Concat(CrossoverSpecies(random, species, top, offspringPerCross));
+
+            return newBatch;
         }
     }
 }
