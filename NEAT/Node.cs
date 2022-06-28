@@ -16,12 +16,16 @@ namespace NEAT
         public int ID;
         public NodeType Type;
         public double Value;
+        public double OldValue;
+        public bool Activated;
 
         public Node()
         {
             ID = -1;
             Type = NodeType.Hidden;
             Value = 0.0;
+            OldValue = 0.0;
+            Activated = false;
         }
 
         public Node(int id, NodeType type)
@@ -29,6 +33,8 @@ namespace NEAT
             ID = id;
             Type = type;
             Value = 0.0;
+            OldValue = 0.0;
+            Activated = type == NodeType.Sensor;
         }
 
         public override string ToString()

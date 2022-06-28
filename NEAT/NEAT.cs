@@ -9,15 +9,12 @@ namespace NEAT
     {
         // This is a global counter of new genes (connections)
         // Innovation is used in crossover gene alignment
-        public static int LatestInnovation;
+        public static int LatestInnovation = 0;
 
-        // TODO: these should be configurable
-        public const double DEFAULT_MAX_WEIGHT = 4.0;
-        public const double DEFAULT_MAX_WEIGHT_SHIFT = 0.5;
-        public const double DEFAULT_C1 = 1.0;
-        public const double DEFAULT_C2 = 1.0;
-        public const double DEFAULT_C3 = 1.0;
-        public const double DEFAULT_DELTA_THRESHOLD = 1.0;
+        public int MAX_ACTIVATE_TRIES = 20;
+
+        public double MaxWeight { get; set; } = 4.0;
+        public double MaxWeightShift { get; set; } = 0.5;
 
         public int SensorCount;
         public int OutputCount;
@@ -61,8 +58,10 @@ namespace NEAT
                 Nodes.Add(new Node(i, NodeType.Output));
         }
 
+        public NEAT(Genus genus) : this(genus.SensorCount, genus.OutputCount) { }
+
         /// <summary>
-        /// Create a new NEAT with the same Genome
+        /// Create a new NEAT with the same Genome.
         /// </summary>
         public NEAT CopyGenome()
         {
@@ -85,18 +84,7 @@ namespace NEAT
 
         public NEAT Crossover(NEAT other)
         {
-            // TODO Speciation using compatibility distance delta
-            // delta = (c1*E)/N + (c2*D)/N + c3*WAvg
-            //      c1, c2, c3 configurable coeficients
-            //      N is the number of genes in the larger genome
-            //      E is the number of excess genes
-            //      D is the number of disjoint genes
-            //      WAvg is the average differences of weight for shared genes
-            // setup a deltaThreshold. If delta > deltaThreshold crossover is not compatible
-            // this will require the crossover function to return a success flag instead of a NEAT
-
-            // TODO Look into adjusted fitness using species deltas, this is more complex
-
+            // TODO move all the innovation/connection mapping and alignment stuff in CompareGenome()
             var newConnections = new List<Connection>();
             var newNodes = new HashSet<Node>();
 
@@ -171,10 +159,53 @@ namespace NEAT
 
         #endregion
 
+        #region Genome Comparison
+
+        public struct GenomeComparisonResult
+        {
+            public SortedSet<int> Innovations;
+
+            public Dictionary<int, Connection> InnovationConnectionLookupA;
+            public Dictionary<int, Connection> InnovationConnectionLookupB;
+
+            public List<int> ExcessInnovations;
+            public List<int> DisjointInnovations;
+            public List<int> SharedInnovations;
+            public double WeightAverageDifference;
+
+            public GenomeComparisonResult()
+            {
+                Innovations = new SortedSet<int>();
+
+                InnovationConnectionLookupA = new Dictionary<int, Connection>();
+                InnovationConnectionLookupB = new Dictionary<int, Connection>();
+
+                ExcessInnovations = new List<int>();
+                DisjointInnovations = new List<int>();
+                SharedInnovations = new List<int>();
+                WeightAverageDifference = 0.0;
+            }
+        }
+
+        public GenomeComparisonResult CompareGenome(NEAT other)
+        {
+            // TODO go through both genomes and fill a new GenomeComparisonResult
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
         #region Mutations
 
         public void MutationRandom(Random random, int maxMutations = 1)
         {
+            // TODO redo the probabilities, make them configurable
+            // TODO Topological mutations
+            // TODO Weights mutations
+            // TODO Reenable mutation
+            // TODO Toggle enable mutation
+            // TODO make mutations more frequent on newer genes
+
             for (int i = 0; i < maxMutations; i++)
             {
                 if (Connections.Count > 0)
@@ -211,6 +242,7 @@ namespace NEAT
 
             // Hidden nodes
             //  Can form connections to output layer nodes without restrictions and can form connections to hidden layer nodes as long as source_id < target_id
+            // TODO with time step activation this might not be an issue anymore, this rule can now be removed
             for (int i = SensorCount + OutputCount; i < Nodes.Count; i++)
             {
                 for (int j = SensorCount; j < Nodes.Count; j++)
@@ -218,18 +250,18 @@ namespace NEAT
                     if (i == j)
                         continue;
 
-                    var sourceNode = Nodes[i];
-                    var targetNode = Nodes[j];
+                    //var sourceNode = Nodes[i];
+                    //var targetNode = Nodes[j];
 
-                    if (targetNode.Type == NodeType.Hidden)
-                    {
-                        // To make sure we don't have any loops in the network hidden nodes can only connect to other hidden nodes where source_id < target_id.
-                        // This is a bit limiting but I don't think it's a huge deal.
-                        if (sourceNode.ID < targetNode.ID)
-                            potentialConnections.Add(new Tuple<int, int>(i, j));
-                    }
-                    else
-                        potentialConnections.Add(new Tuple<int, int>(i, j));
+                    //if (targetNode.Type == NodeType.Hidden)
+                    //{
+                    //    // To make sure we don't have any loops in the network hidden nodes can only connect to other hidden nodes where source_id < target_id.
+                    //    // This is a bit limiting but I don't think it's a huge deal.
+                    //    if (sourceNode.ID < targetNode.ID)
+                    //        potentialConnections.Add(new Tuple<int, int>(i, j));
+                    //}
+                    //else
+                    potentialConnections.Add(new Tuple<int, int>(i, j));
                 }
             }
 
@@ -248,8 +280,7 @@ namespace NEAT
 
             var chosenConnection = potentialConnections[random.Next(0, potentialConnections.Count)];
             var weigth = 1.0;
-            var innov = LatestInnovation;
-            LatestInnovation++;
+            var innov = LatestInnovation++;
 
             Connections.Add(new Connection(Nodes[chosenConnection.Item1], Nodes[chosenConnection.Item2], weigth, true, innov));
             RecalculateReverseLookupTable();
@@ -263,10 +294,8 @@ namespace NEAT
             var chosenConnection = Connections[random.Next(Connections.Count)];
             chosenConnection.Enabled = false;
 
-            var newConnection1 = new Connection(chosenConnection.Source, newNode, chosenConnection.Weight, true, LatestInnovation);
-            LatestInnovation++;
-            var newConnection2 = new Connection(newNode, chosenConnection.Target, 1.0, true, LatestInnovation);
-            LatestInnovation++;
+            var newConnection1 = new Connection(chosenConnection.Source, newNode, chosenConnection.Weight, true, LatestInnovation++);
+            var newConnection2 = new Connection(newNode, chosenConnection.Target, 1.0, true, LatestInnovation++);
 
             Connections.Add(newConnection1);
             Connections.Add(newConnection2);
@@ -275,7 +304,8 @@ namespace NEAT
         }
         public void MutateWeight(Random random)
         {
-            var weight = random.NextDouble() * DEFAULT_MAX_WEIGHT * 2.0 - DEFAULT_MAX_WEIGHT;
+            // TODO use gaussian distribution
+            var weight = random.NextDouble() * MaxWeight * 2.0 - MaxWeight;
             Connections[random.Next(Connections.Count)].Weight = weight;
 
             RecalculateReverseLookupTable();
@@ -283,9 +313,10 @@ namespace NEAT
 
         public void MutateShiftWeight(Random random)
         {
-            var weightShift = random.NextDouble() * DEFAULT_MAX_WEIGHT_SHIFT * 2.0 - DEFAULT_MAX_WEIGHT_SHIFT;
+            // TODO use gaussian distribution
+            var weightShift = random.NextDouble() * MaxWeightShift * 2.0 - MaxWeightShift;
             var con = Connections[random.Next(Connections.Count)];
-            var newWeight = Math.Clamp(con.Weight + weightShift, -DEFAULT_MAX_WEIGHT, DEFAULT_MAX_WEIGHT);
+            var newWeight = Math.Clamp(con.Weight + weightShift, -MaxWeight, MaxWeight);
             con.Weight = newWeight;
 
             RecalculateReverseLookupTable();
@@ -296,21 +327,38 @@ namespace NEAT
         #region Inputs/Outputs
 
         /// <summary>
-        /// This function computes and set all non-sensor node values.
+        /// This function compute one time step of the network.
         /// </summary>
-        public void ComputeValues()
+        /// <returns><c>true</c> if activation was possible, <c>false</c> if no valid connections between sensors and outputs.</returns>
+        public bool Activate()
         {
-            if (Connections.Count <= 0)
-                return;
+            //if (Connections.Count <= 0)
+            //    return;
 
-            // Hidden layer first
-            // This works because connections between hidden nodes can only be source_id < target_id
-            for (int i = SensorCount + OutputCount; i < Nodes.Count; i++)
-                Nodes[i].Value = ComputeNode(i);
+            //// Hidden layer first
+            //// This works because connections between hidden nodes can only be source_id < target_id
+            //for (int i = SensorCount + OutputCount; i < Nodes.Count; i++)
+            //    Nodes[i].Value = ComputeNode(i);
 
-            // Output layer second
-            for (int i = SensorCount; i < SensorCount + OutputCount; i++)
-                Nodes[i].Value = ComputeNode(i);
+            //// Output layer second
+            //for (int i = SensorCount; i < SensorCount + OutputCount; i++)
+            //    Nodes[i].Value = ComputeNode(i);
+
+            var activateTries = 0;
+            var alreadyActivated = false;
+            while (!AtLeastOneOutputActivated())
+            {
+                activateTries++;
+                if (activateTries >= MAX_ACTIVATE_TRIES)
+                    return false;
+
+                ActivateInternal();
+                alreadyActivated = true;
+            }
+
+            if (!alreadyActivated)
+                ActivateInternal();
+            return true;
         }
 
         public void SetSensorValues(params double[] values)
@@ -370,7 +418,37 @@ namespace NEAT
         {
             //var res = 1.0f / (1.0f + Math.Exp(-x));
             //return res * 2.0f - 1.0f;
-            return Math.Tanh(x);
+            return Math.Tanh(x*2);
+        }
+
+        private void ActivateInternal()
+        {
+            for (int nodeIndex = SensorCount; nodeIndex < Nodes.Count; nodeIndex++)
+            {
+                var node = Nodes[nodeIndex];
+                var connections = _reverseLookupTable[node.ID];
+
+                if (node.Activated || connections.Where(connection => connection.Source.Activated).Any())
+                {
+                    node.Activated = true;
+                    node.OldValue = node.Value;
+
+                    var value = 0.0;
+                    foreach (var connection in connections)
+                        value += connection.Source.Activated ? connection.Source.Value * connection.Weight : 0.0;
+
+                    node.Value = Sigmoid(value);
+                }
+            }
+        }
+
+        private bool AtLeastOneOutputActivated()
+        {
+            for (int nodeIndex = SensorCount; nodeIndex < SensorCount + OutputCount; nodeIndex++)
+                if (Nodes[nodeIndex].Activated)
+                    return true;
+
+            return false;
         }
 
         #endregion
