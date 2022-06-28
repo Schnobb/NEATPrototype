@@ -59,18 +59,29 @@ namespace NEAT
 
         public bool IsCompatible(NEAT neat)
         {
-            // TODO compatibility
             // delta = (c1*E)/N + (c2*D)/N + c3*WAvg
             //      c1, c2, c3 configurable coeficients
             //      N is the number of genes in the larger genome
             //      E is the number of excess genes
             //      D is the number of disjoint genes
             //      WAvg is the average differences of weight for shared genes
-            // If delta > deltaThreshold for all species create a new species
+            // If delta > deltaThreshold species is not compatible
 
             // TODO Look into adjusted fitness using species deltas, this is more complex
 
-            throw new NotImplementedException();
+            var genomeCompareResults = OriginalNEAT.CompareGenome(neat);
+
+            var e = genomeCompareResults.ExcessInnovations.Count();
+            var d = genomeCompareResults.DisjointInnovations.Count();
+            //var m = genomeCompareResults.MatchingInnovations.Count();
+            var wavg = genomeCompareResults.WeightAverageDifference;
+
+            // In the paper N is mentionned to be the size of the larger genome and is used to divide the E and D factors in the formula.
+            // This is supposed to normalize for genome size, however in the actual implementation it is not used.
+            //var n = Math.Max(genomeCompareResults.InnovationConnectionLookupA.Count(), genomeCompareResults.InnovationConnectionLookupB.Count());
+
+            //return (C1 * e + C2 * d) / n + C3 * wavg < DeltaThreshold;
+            return C1 * e + C2 * d + C3 * wavg < DeltaThreshold;
         }
     }
 }

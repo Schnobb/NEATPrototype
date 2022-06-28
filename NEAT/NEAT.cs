@@ -15,6 +15,7 @@ namespace NEAT
 
         public double MaxWeight { get; set; } = 4.0;
         public double MaxWeightShift { get; set; } = 0.5;
+        public double SigmoidCoefficient { get; set; } = 2.0;
 
         public int SensorCount;
         public int OutputCount;
@@ -163,26 +164,22 @@ namespace NEAT
 
         public struct GenomeComparisonResult
         {
-            public SortedSet<int> Innovations;
-
             public Dictionary<int, Connection> InnovationConnectionLookupA;
             public Dictionary<int, Connection> InnovationConnectionLookupB;
 
             public List<int> ExcessInnovations;
             public List<int> DisjointInnovations;
-            public List<int> SharedInnovations;
+            public List<int> MatchingInnovations;
             public double WeightAverageDifference;
 
             public GenomeComparisonResult()
             {
-                Innovations = new SortedSet<int>();
-
                 InnovationConnectionLookupA = new Dictionary<int, Connection>();
                 InnovationConnectionLookupB = new Dictionary<int, Connection>();
 
                 ExcessInnovations = new List<int>();
                 DisjointInnovations = new List<int>();
-                SharedInnovations = new List<int>();
+                MatchingInnovations = new List<int>();
                 WeightAverageDifference = 0.0;
             }
         }
@@ -418,7 +415,7 @@ namespace NEAT
         {
             //var res = 1.0f / (1.0f + Math.Exp(-x));
             //return res * 2.0f - 1.0f;
-            return Math.Tanh(x*2);
+            return Math.Tanh(x * SigmoidCoefficient);
         }
 
         private void ActivateInternal()
