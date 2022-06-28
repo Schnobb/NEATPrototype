@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace KeepBallUpBetter
 {
-    public abstract class Game
+    internal abstract class Game
     {
         public const uint DEFAULT_TARGET_FPS = 0;
         public const uint DEFAULT_TARGET_TPS = 0;

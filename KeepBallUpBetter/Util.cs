@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace KeepBallUpBetter
 {
-    public static class Util
+    internal static class Util
     {
         public static bool Collides(float x1, float y1, float w1, float h1, float x2, float y2, float w2, float h2)
         {
@@ -54,7 +54,7 @@ namespace KeepBallUpBetter
         }
     }
 
-    public struct Line
+    internal struct Line
     {
         public Vector2f Start;
         public Vector2f End;
@@ -109,7 +109,7 @@ namespace KeepBallUpBetter
         }
     }
 
-    public struct Rect
+    internal struct Rect
     {
         public Vector2f Position;
         public Vector2f Size;

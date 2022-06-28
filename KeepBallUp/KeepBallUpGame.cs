@@ -107,7 +107,7 @@ namespace KeepBallUp
             if (AI_ENABLED)
             {
                 SetSensorValues();
-                _neatManager.GetCurrentNEAT().ComputeValues();
+                _neatManager.GetCurrentNEAT().Activate();
                 var values = _neatManager.GetCurrentNEAT().GetOutputValues();
                 var direction = values[(int)Output.Direction];
                 _aiDirection = (float)direction;

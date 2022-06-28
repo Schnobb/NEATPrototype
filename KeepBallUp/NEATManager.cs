@@ -22,9 +22,9 @@ namespace KeepBallUp
         private Random _random;
 
         /// <summary>
-        /// Create a new NEATManager
+        /// Create a new NEATManager.
         /// </summary>
-        /// <param name="batchSize">Should be > 6</param>
+        /// <param name="batchSize">Should be > 6.</param>
         public NEATManager(Random random, int sensorCount, int outputCount, int batchSize)
         {
             if (batchSize < 7)
@@ -92,7 +92,7 @@ namespace KeepBallUp
 
             for (int i = 0; i < BatchSize - topAllTime.Count - topLastBatch.Count; i++)
             {
-                var newNEAT = new NEAT.NEAT(SensorCount, OutputCount);
+                var newNEAT = new NEAT.NEAT(0, SensorCount, OutputCount);
                 newNEAT.MutationRandom(_random, NewNEATMutationCount);
                 newBatch.Add(newNEAT);
             }
@@ -115,8 +115,8 @@ namespace KeepBallUp
     }
 
     /// <summary>
-    /// Comparer for comparing two keys, handling equality as beeing greater
-    /// Use this Comparer e.g. with SortedLists or SortedDictionaries, that don't allow duplicate keys
+    /// Comparer for comparing two keys, handling equality as beeing greater.
+    /// Use this Comparer e.g. with SortedLists or SortedDictionaries, that don't allow duplicate keys.
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
     class DuplicateKeyComparer<TKey>

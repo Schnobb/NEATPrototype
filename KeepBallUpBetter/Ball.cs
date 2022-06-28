@@ -11,6 +11,7 @@ namespace KeepBallUpBetter
 {
     internal class Ball
     {
+        private const bool DISABLE_RANDOM_DIRECTION = true;
         private const float RANDOM_ANGLE_VARIATION_ON_BOUNCE = (float)Math.PI / 16.0f;
         private const uint BALL_COLLISION_RESOLUTION = 16;
         private const bool DEBUG_DISABLE_MOVEMENT = false;
@@ -109,6 +110,9 @@ namespace KeepBallUpBetter
 
         public void RandomizeDirection()
         {
+            if (DISABLE_RANDOM_DIRECTION)
+                return;
+
             Direction = new Vector2f(0.0f, 1.0f).Rotate(RandomManager.GetNextFloat() * 2.0f * (float)Math.PI);
         }
 
@@ -171,25 +175,73 @@ namespace KeepBallUpBetter
             //foreach (var line in collisionLines)
             //    _debugLines.Add(line * 1.0f);
 
+            var collisions = new List<Bounce>();
             foreach (var collisionLine in collisionLines)
             {
                 var bounce = TestLineCollision(collisionLine);
                 if (bounce.HasValue)
-                {
-                    newPos = bounce.Value.Intersection - bounce.Value.BallOffset;
-
-                    if (bounce.Value.CollisionSide == Bounce.Side.Left || bounce.Value.CollisionSide == Bounce.Side.Right)
-                        Direction = new Vector2f(-Direction.X, Direction.Y);
-                    else
-                        Direction = new Vector2f(Direction.X, -Direction.Y);
-
-                    Arena.Score++;
-
-                    return true;
-                }
+                    collisions.Add(bounce.Value);
+                //{
+                //    var offsetMagnitude = bounce.Value.BallOffset.Magnitude();
+                //    //collisions.Add(offsetMagnitude, bounce.Value);
+                //}
             }
 
-            return false;
+            if (collisions.Count <= 0)
+                return false;
+
+            collisions.Sort((c1, c2) => c1.BallOffset.Magnitude().CompareTo(c2.BallOffset.Magnitude()));
+            var highestBounce = collisions.Last();
+            newPos = highestBounce.Intersection - highestBounce.BallOffset;
+
+            switch (highestBounce.CollisionSide)
+            {
+                case Bounce.Side.Top:
+                    Direction = new Vector2f(Direction.X, -Math.Abs(Direction.Y));
+                    break;
+                case Bounce.Side.Right:
+                    Direction = new Vector2f(Math.Abs(Direction.X), -Math.Abs(Direction.Y));
+                    break;
+                case Bounce.Side.Bottom:
+                    Direction = new Vector2f(Direction.X, Math.Abs(Direction.Y));
+                    break;
+                case Bounce.Side.Left:
+                    Direction = new Vector2f(-Math.Abs(Direction.X), -Math.Abs(Direction.Y));
+                    break;
+            }
+
+            Arena.Score++;
+            return true;
+
+            //foreach (var collisionLine in collisionLines)
+            //{
+            //    var bounce = TestLineCollision(collisionLine);
+            //    if (bounce.HasValue)
+            //    {
+            //        newPos = bounce.Value.Intersection - bounce.Value.BallOffset;
+
+            //        switch (bounce.Value.CollisionSide)
+            //        {
+            //            case Bounce.Side.Top:
+            //                Direction = new Vector2f(Direction.X, -Math.Abs(Direction.Y));
+            //                break;
+            //            case Bounce.Side.Right:
+            //                Direction = new Vector2f(Math.Abs(Direction.X), -Math.Abs(Direction.Y));
+            //                break;
+            //            case Bounce.Side.Bottom:
+            //                Direction = new Vector2f(Direction.X, Math.Abs(Direction.Y));
+            //                break;
+            //            case Bounce.Side.Left:
+            //                Direction = new Vector2f(-Math.Abs(Direction.X), -Math.Abs(Direction.Y));
+            //                break;
+            //        }
+
+            //        Arena.Score++;
+            //        return true;
+            //    }
+            //}
+
+            //return false;
         }
 
         private struct Bounce

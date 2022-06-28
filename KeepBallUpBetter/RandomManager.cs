@@ -30,7 +30,7 @@ namespace KeepBallUpBetter
         }
 
         /// <summary>
-        /// Returns next random float between -1.0 and 1.0
+        /// Returns next random float between -1.0 and 1.0.
         /// </summary>
         public static float GetNextFullFloat()
         {
@@ -58,7 +58,7 @@ namespace KeepBallUpBetter
         }
 
         /// <summary>
-        /// Returns next random double between -1.0 and 1.0
+        /// Returns next random double between -1.0 and 1.0.
         /// </summary>
         public static double GetNextFullDouble()
         {
