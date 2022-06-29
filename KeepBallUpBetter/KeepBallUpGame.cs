@@ -15,6 +15,8 @@ namespace KeepBallUpBetter
         private const float ARENA_BORDER_SIZE = 32.0f;
         // TODO this should be an amount of arena instead
         private const bool SPLIT_SCREEN = false;
+        // TODO Draw current Genome on screen
+        public const bool ENABLE_AI = true;
 
         private const int DEFAULT_SEED = 1337;
 
@@ -22,6 +24,8 @@ namespace KeepBallUpBetter
 
         private Arena _arena;
         private Arena _arena2;
+
+        public BrainManager BrainManager { get; private set; }
 
         private Vector2f _mousePos;
 
@@ -35,6 +39,9 @@ namespace KeepBallUpBetter
         private Vector2f? _line2End;
 
         private Vector2f? _lineCollision;
+
+        private bool _keyPlusDown;
+        private bool _keyMinusDown;
 
         public KeepBallUpGame(RenderWindow window) : base(window) { }
         public KeepBallUpGame(RenderWindow window, uint targetFPS, uint targetTPS) : base(window, targetFPS, targetTPS) { }
@@ -52,6 +59,10 @@ namespace KeepBallUpBetter
             RandomManager.Seed = DEFAULT_SEED;
 
             //TimeMultiplier = 0.1f;
+            TimeMultiplier = 4.0f;
+
+            if (ENABLE_AI)
+                BrainManager = new BrainManager();
 
             Console.WriteLine("Initialized");
         }
@@ -70,8 +81,17 @@ namespace KeepBallUpBetter
             if (Keyboard.IsKeyPressed(Keyboard.Key.Escape))
                 IsRunning = false;
 
-            if (Keyboard.IsKeyPressed(Keyboard.Key.Space))
-                _arena.ResetAll();
+            if (!ENABLE_AI)
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Space))
+                    _arena.ResetAll();
+
+            //if (_keyPlusDown && !Keyboard.IsKeyPressed(Keyboard.Key.Add))
+            //    TimeMultiplier *= 2.0f;
+            //if (_keyMinusDown && !Keyboard.IsKeyPressed(Keyboard.Key.Subtract))
+            //    TimeMultiplier /= 2.0f;
+
+            //_keyPlusDown = Keyboard.IsKeyPressed(Keyboard.Key.Add);
+            //_keyMinusDown = Keyboard.IsKeyPressed(Keyboard.Key.Subtract);
 
             UpdateDebugCollisionLines();
             _arena.Update(deltaTime);
@@ -79,8 +99,11 @@ namespace KeepBallUpBetter
             if (_arena2 != null)
                 _arena2.Update(deltaTime);
 
-            _mouseLeftPressed = Mouse.IsButtonPressed(Mouse.Button.Left);
-            _mouseRightPressed = Mouse.IsButtonPressed(Mouse.Button.Right);
+            if (!ENABLE_AI)
+            {
+                _mouseLeftPressed = Mouse.IsButtonPressed(Mouse.Button.Left);
+                _mouseRightPressed = Mouse.IsButtonPressed(Mouse.Button.Right);
+            }
         }
 
         public override void Draw(float deltaTime)
@@ -102,7 +125,7 @@ namespace KeepBallUpBetter
 
         private void UpdateDebugCollisionLines()
         {
-            if(Util.Collides(_mousePos, new Vector2f(1.0f, 1.0f), _arena.Position, _arena.Size))
+            if (Util.Collides(_mousePos, new Vector2f(1.0f, 1.0f), _arena.Position, _arena.Size))
             {
                 if (_mouseLeftPressed && !Mouse.IsButtonPressed(Mouse.Button.Left))
                 {

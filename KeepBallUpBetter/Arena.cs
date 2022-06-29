@@ -56,6 +56,9 @@ namespace KeepBallUpBetter
 
         public void ResetAll()
         {
+            if (Parent.BrainManager != null)
+                Parent.BrainManager.NextGenome(Score);
+
             Reset();
             Score = 0;
             Lives = MaxLives;
@@ -123,7 +126,11 @@ namespace KeepBallUpBetter
             Ball.Draw(window, deltaTime);
             Paddle.Draw(window, deltaTime);
 
-            Parent.Print($"SCORE: {Score}\nLIVES: {Lives}\nTIME: {RoundTime:0.00}", Position.X + 8.0f, Position.Y + 8.0f, 14);
+            var hud = $"SCORE: {Score}\nLIVES: {Lives}\nTIME: {RoundTime:0.00}";
+            if (KeepBallUpGame.ENABLE_AI)
+                hud += $"\nGENOME BATCH: {Parent.BrainManager.CurrentGenomeIndex + 1}/{Parent.BrainManager.BatchSize}";
+
+            Parent.Print(hud, Position.X + 8.0f, Position.Y + 8.0f, 14);
             //Parent.Print($"Gravity Timer: {GravityTimer}\nCurrent Gravity: {Gravity}", Position.X + 8.0f, Position.Y + 32.0f, 12);
         }
     }

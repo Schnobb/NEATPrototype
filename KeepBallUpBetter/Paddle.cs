@@ -11,7 +11,6 @@ namespace KeepBallUpBetter
 {
     internal class Paddle
     {
-        private const bool USE_AI = false;
         private const float MAX_VELOCITY_GAIN = 650.0f;
         private const float DEFAULT_FRICTION = 0.35f;
         private const float MIN_VELOCITY_THRESHOLD = 0.01f;
@@ -40,9 +39,18 @@ namespace KeepBallUpBetter
 
         public void Update(float deltaTime)
         {
-            if (USE_AI)
-            {
+            Velocity -= (1.0f/Friction) * Velocity * deltaTime;
 
+            if (KeepBallUpGame.ENABLE_AI)
+            {
+                var posX = Position.X / (Arena.Size.X / 2.0f) - 1.0f;
+                var velX = Velocity / MAX_VELOCITY_GAIN;
+                var deltaBall = (Position - Arena.Ball.Position).Normalize();
+
+                Arena.Parent.BrainManager.SetSensorValues(posX, velX, deltaBall.X, deltaBall.Y, Arena.Ball.Direction.X, Arena.Ball.Direction.Y);
+                Arena.Parent.BrainManager.Activate();
+                Direction = new Vector2f(1.0f, 0.0f);
+                Velocity = (float)Arena.Parent.BrainManager.GetOutputs()[0] * MAX_VELOCITY_GAIN;
             }
             else
             {
@@ -55,7 +63,6 @@ namespace KeepBallUpBetter
             var posDelta = Direction * Velocity;
             var newPos = Position + posDelta * deltaTime;
 
-            Velocity -= (1.0f/Friction) * Velocity * deltaTime;
             if (Math.Abs(Velocity) < MIN_VELOCITY_THRESHOLD)
                 Velocity = 0.0f;
 

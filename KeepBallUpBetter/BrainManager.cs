@@ -31,19 +31,19 @@ namespace KeepBallUpBetter
 
         public int BatchSize { get; set; } = 30;
         public List<NEAT.Genome> CurrentBatch { get; private set; }
-        public NEAT.Genome CurrentGenome { get { return CurrentBatch[_currentGenomeIndex]; } }
+        public int CurrentGenomeIndex { get; private set; }
+        public NEAT.Genome CurrentGenome { get { return CurrentBatch[CurrentGenomeIndex]; } }
 
         public List<NEAT.Genome> History { get; private set; }
         public List<NEAT.Genome> HallOfFame { get; private set; }
 
-        private int _currentGenomeIndex;
         private double _loopbackValue;
 
         public BrainManager()
         {
             Genus = new NEAT.Genus(BatchSize, Enum.GetNames(typeof(Sensor)).Length, Enum.GetNames(typeof(Output)).Length);
             CurrentBatch = Genus.GenerateNewBatch(RandomManager.GetRandomInstance());
-            _currentGenomeIndex = 0;
+            CurrentGenomeIndex = 0;
             History = new List<NEAT.Genome>();
         }
 
@@ -51,11 +51,11 @@ namespace KeepBallUpBetter
         {
             CurrentGenome.Fitness = fitness;
             _loopbackValue = 0;
-            _currentGenomeIndex++;
+            CurrentGenomeIndex++;
 
-            if (_currentGenomeIndex >= CurrentBatch.Count())
+            if (CurrentGenomeIndex >= CurrentBatch.Count())
             {
-                _currentGenomeIndex = 0;
+                CurrentGenomeIndex = 0;
                 CurrentBatch = CurrentBatch.Where(x => x.Fitness >= 0.0).ToList();
                 History.Concat(CurrentBatch);
                 CurrentBatch = Genus.CrossoverAllSpecies(RandomManager.GetRandomInstance());

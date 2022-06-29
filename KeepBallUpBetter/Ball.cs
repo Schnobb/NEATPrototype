@@ -11,7 +11,7 @@ namespace KeepBallUpBetter
 {
     internal class Ball
     {
-        private const bool DISABLE_RANDOM_DIRECTION = true;
+        private const bool DISABLE_RANDOM_DIRECTION = false;
         private const float RANDOM_ANGLE_VARIATION_ON_BOUNCE = (float)Math.PI / 16.0f;
         private const uint BALL_COLLISION_RESOLUTION = 16;
         private const bool DEBUG_DISABLE_MOVEMENT = false;

@@ -19,6 +19,11 @@ namespace KeepBallUpBetter
             return (float)Math.Sqrt(v.X * v.X + v.Y * v.Y);
         }
 
+        public static Vector2f Normalize(this Vector2f v)
+        {
+            return v / v.Magnitude();
+        }
+
         /// <summary>
         /// Rotates a Vector2f clockwise. Angle is in radians.
         /// </summary>
