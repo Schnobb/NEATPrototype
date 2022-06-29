@@ -24,6 +24,7 @@ namespace KeepBallUpBetter
         private Arena _arena2;
 
         private Vector2f _mousePos;
+
         private bool _mouseLeftPressed;
         private bool _mouseRightPressed;
 

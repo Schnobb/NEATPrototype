@@ -19,14 +19,8 @@ namespace NEAT
         public double OldValue;
         public bool Activated;
 
-        public Node()
-        {
-            ID = -1;
-            Type = NodeType.Hidden;
-            Value = 0.0;
-            OldValue = 0.0;
-            Activated = false;
-        }
+        public Node() : this(-1, NodeType.Hidden) { }
+        public Node(Node node) : this(node.ID, node.Type) { }
 
         public Node(int id, NodeType type)
         {

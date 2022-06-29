@@ -26,51 +26,55 @@ namespace NEAT
             Species = new List<Species>();
         }
 
-        public void AddToSpecies(NEAT neat)
+        public Species AddToSpecies(Genome genome)
         {
             foreach (var species in Species)
             {
-                if (species.IsCompatible(neat))
+                if (species.IsCompatible(genome))
                 {
-                    species.Members.Add(neat);
-                    return;
+                    species.Members.Add(genome);
+                    return species;
                 }
             }
 
-            Species.Add(new Species(this, neat));
+            var newSpecies = new Species(this, genome);
+            Species.Add(newSpecies);
+            return newSpecies;
         }
 
-        public List<NEAT> GenerateNewBatch(Random random)
+        public List<Genome> GenerateNewBatch(Random random)
         {
-            var newBatch = new List<NEAT>();
+            var newBatch = new List<Genome>();
             for (int i = 0; i < BatchSize; i++)
             {
-                var neat = new NEAT(this);
-                neat.MutationRandom(random, GenerateMaxMutations);
-                AddToSpecies(neat);
-                newBatch.Add(neat);
+                var genome = new Genome(this);
+                genome.MutationRandom(random, GenerateMaxMutations);
+                genome.Species = AddToSpecies(genome);
+                newBatch.Add(genome);
             }
 
             return newBatch;
         }
 
-        public List<NEAT> CrossoverSpecies(Random random, Species species, int top = 3, int offspringPerCross = 3)
+        public List<Genome> CrossoverSpecies(Random random, Species species)
         {
-            // TODO instead of offspringPerCross it should be based on BatchSize
+            // TODO figure out what we'll cross together
+            // TODO create BatchSize offsprings. NO -> that should be handled in CrossoverAllSpecies probably
             // TODO remove all NEATs that are not yet evaluated (fitness < 0)
             // TODO elect a superchamp from the top and clone it a couple times, keep one original and mutate the other clones
             // TODO cross top x together and mutate
             // TODO what to do when species is not big enough? clone and mutate?
             // TODO AddToSpecies()
+            // TODO assign species and parent(s) species to Genome
             throw new NotImplementedException();
         }
 
-        public List<NEAT> CrossoverAllSpecies(Random random, int top = 3, int offspringPerCross = 3)
+        public List<Genome> CrossoverAllSpecies(Random random)
         {
             // TODO chance to crossover across species
-            var newBatch = new List<NEAT>();
+            var newBatch = new List<Genome>();
             foreach (var species in Species)
-                newBatch.Concat(CrossoverSpecies(random, species, top, offspringPerCross));
+                newBatch.Concat(CrossoverSpecies(random, species));
 
             return newBatch;
         }

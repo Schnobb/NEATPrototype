@@ -2,15 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace KeepBallUp
 {
     class NEATManager
     {
         public int CurrentIndex;
-        public List<NEAT.NEAT> CurrentNEATs;
-        public SortedList<double, NEAT.NEAT> DeadNEATs;
+        public List<Genome> CurrentNEATs;
+        public SortedList<double, Genome> DeadNEATs;
         public int BatchSize;
 
         public int SensorCount;
@@ -30,8 +29,8 @@ namespace KeepBallUp
             if (batchSize < 7)
                 throw new Exception("batchSize should be > 6");
 
-            CurrentNEATs = new List<NEAT.NEAT>();
-            DeadNEATs = new SortedList<double, NEAT.NEAT>(new DuplicateKeyComparer<double>());
+            CurrentNEATs = new List<Genome>();
+            DeadNEATs = new SortedList<double, Genome>(new DuplicateKeyComparer<double>());
             SensorCount = sensorCount;
             OutputCount = outputCount;
             BatchSize = batchSize;
@@ -41,7 +40,7 @@ namespace KeepBallUp
             GenerateNewBatch();
         }
 
-        public NEAT.NEAT GetCurrentNEAT()
+        public Genome GetCurrentNEAT()
         {
             return CurrentNEATs[CurrentIndex];
         }
@@ -59,9 +58,9 @@ namespace KeepBallUp
 
         public void GenerateNewBatch()
         {
-            var topAllTime = new List<NEAT.NEAT>();
-            var topLastBatch = new List<NEAT.NEAT>();
-            var newBatch = new List<NEAT.NEAT>();
+            var topAllTime = new List<Genome>();
+            var topLastBatch = new List<Genome>();
+            var newBatch = new List<Genome>();
 
             if (DeadNEATs.Count > 3)
             {
@@ -69,7 +68,7 @@ namespace KeepBallUp
                 {
                     for (int j = 0; j < 3; j++)
                     {
-                        var newNEAT = DeadNEATs.Values[DeadNEATs.Count - 1 - i].CopyGenome();
+                        var newNEAT = DeadNEATs.Values[DeadNEATs.Count - 1 - i].CopyGenes();
                         newNEAT.MutationRandom(_random, ExistingNEATMutationCount);
                         topAllTime.Add(newNEAT);
                     }
@@ -83,7 +82,7 @@ namespace KeepBallUp
                 {
                     for (int j = 0; j < 3; j++)
                     {
-                        var newNEAT = rankedCurrentBatch.Values[rankedCurrentBatch.Count - 1 - i].CopyGenome();
+                        var newNEAT = rankedCurrentBatch.Values[rankedCurrentBatch.Count - 1 - i].CopyGenes();
                         newNEAT.MutationRandom(_random, ExistingNEATMutationCount);
                         topLastBatch.Add(newNEAT);
                     }
@@ -92,7 +91,7 @@ namespace KeepBallUp
 
             for (int i = 0; i < BatchSize - topAllTime.Count - topLastBatch.Count; i++)
             {
-                var newNEAT = new NEAT.NEAT(SensorCount, OutputCount);
+                var newNEAT = new Genome(SensorCount, OutputCount);
                 newNEAT.MutationRandom(_random, NewNEATMutationCount);
                 newBatch.Add(newNEAT);
             }
@@ -100,9 +99,9 @@ namespace KeepBallUp
             CurrentNEATs = newBatch.Concat(topLastBatch.Concat(topAllTime)).ToList();
         }
 
-        private SortedList<double, NEAT.NEAT> RetireNEATs()
+        private SortedList<double, Genome> RetireNEATs()
         {
-            var rankedCurrentBatch = new SortedList<double, NEAT.NEAT>(new DuplicateKeyComparer<double>());
+            var rankedCurrentBatch = new SortedList<double, Genome>(new DuplicateKeyComparer<double>());
             foreach (var neat in CurrentNEATs)
             {
                 DeadNEATs.Add(neat.Fitness, neat);

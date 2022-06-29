@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace KeepBallUpBetter
 {
-    internal class NEATManager
+    internal class BrainManager
     {
         // TODO we'll probably want to handle multiple NEATs at the same time, this is written to handle one NEAT at a time
         public enum Sensor
@@ -30,41 +30,41 @@ namespace KeepBallUpBetter
         public NEAT.Genus Genus { get; private set; }
 
         public int BatchSize { get; set; } = 30;
-        public List<NEAT.NEAT> CurrentBatch { get; private set; }
-        public NEAT.NEAT CurrentNEAT { get { return CurrentBatch[_currentNEATIndex]; } }
+        public List<NEAT.Genome> CurrentBatch { get; private set; }
+        public NEAT.Genome CurrentGenome { get { return CurrentBatch[_currentGenomeIndex]; } }
 
-        public List<NEAT.NEAT> History { get; private set; }
-        public List<NEAT.NEAT> HallOfFame { get; private set; }
+        public List<NEAT.Genome> History { get; private set; }
+        public List<NEAT.Genome> HallOfFame { get; private set; }
 
-        private int _currentNEATIndex;
+        private int _currentGenomeIndex;
         private double _loopbackValue;
 
-        public NEATManager()
+        public BrainManager()
         {
             Genus = new NEAT.Genus(BatchSize, Enum.GetNames(typeof(Sensor)).Length, Enum.GetNames(typeof(Output)).Length);
             CurrentBatch = Genus.GenerateNewBatch(RandomManager.GetRandomInstance());
-            _currentNEATIndex = 0;
-            History = new List<NEAT.NEAT>();
+            _currentGenomeIndex = 0;
+            History = new List<NEAT.Genome>();
         }
 
-        public NEAT.NEAT NextNEAT(double fitness)
+        public NEAT.Genome NextGenome(double fitness)
         {
-            CurrentNEAT.Fitness = fitness;
+            CurrentGenome.Fitness = fitness;
             _loopbackValue = 0;
-            _currentNEATIndex++;
+            _currentGenomeIndex++;
 
-            if (_currentNEATIndex >= CurrentBatch.Count())
+            if (_currentGenomeIndex >= CurrentBatch.Count())
             {
-                _currentNEATIndex = 0;
+                _currentGenomeIndex = 0;
                 CurrentBatch = CurrentBatch.Where(x => x.Fitness >= 0.0).ToList();
                 History.Concat(CurrentBatch);
                 CurrentBatch = Genus.CrossoverAllSpecies(RandomManager.GetRandomInstance());
             }
 
-            return CurrentNEAT;
+            return CurrentGenome;
         }
 
-        public List<NEAT.NEAT> GetHallOfFame()
+        public List<NEAT.Genome> GetHallOfFame()
         {
             // Copy list
             HallOfFame = History.Where(x => true).ToList();
@@ -77,24 +77,24 @@ namespace KeepBallUpBetter
 
         public void SetSensorValues(float paddleX, float paddleDX, float ballRelX, float ballRelY, float ballDX, float ballDY)
         {
-            CurrentNEAT.SetSensorValues(paddleX, paddleDX, ballRelX, ballRelY, ballDX, ballDY, 1.0, _loopbackValue);
+            CurrentGenome.SetSensorValues(paddleX, paddleDX, ballRelX, ballRelY, ballDX, ballDY, 1.0, _loopbackValue);
         }
 
         public void Activate()
         {
-            if (!CurrentNEAT.Activate())
+            if (!CurrentGenome.Activate())
             {
                 // TODO should it be 0? I think invalid NEATs should probably be eliminated. -1 would make sense.
-                NextNEAT(-1.0);
+                NextGenome(-1.0);
                 return;
             }
 
-            _loopbackValue = CurrentNEAT.GetOutputValues()[(int)Output.Loopback];
+            _loopbackValue = CurrentGenome.GetOutputValues()[(int)Output.Loopback];
         }
 
         public List<double> GetOutputs()
         {
-            return CurrentNEAT.GetOutputValues();
+            return CurrentGenome.GetOutputValues();
         }
 
         #endregion

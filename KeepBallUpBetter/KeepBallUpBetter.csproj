@@ -17,6 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NEAT\NEAT.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Content\CascadiaMono.ttf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

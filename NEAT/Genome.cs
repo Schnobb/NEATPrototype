@@ -5,7 +5,7 @@ using System.Text;
 
 namespace NEAT
 {
-    public class NEAT
+    public class Genome
     {
         private const int MAX_ACTIVATE_TRIES = 20;
 
@@ -20,10 +20,15 @@ namespace NEAT
         public int SensorCount { get; set; }
         public int OutputCount { get; set; }
 
-        #region Genome
-        // TODO traits
+        #region Genes
+        // TODO traits?
         public List<Node> Nodes { get; set; }
         public List<Connection> Connections { get; set; }
+        #endregion
+
+        #region Genealogy shit
+        public Species Species { get; set; }
+        public List<Species> ParentsSpecies { get; set; }
         #endregion
 
         public double Fitness { get; set; }
@@ -32,18 +37,7 @@ namespace NEAT
 
         #region Init
 
-        public NEAT()
-        {
-            SensorCount = 0;
-            OutputCount = 0;
-            Fitness = -1.0;
-
-            Nodes = new List<Node>();
-            Connections = new List<Connection>();
-            _reverseLookupTable = new Dictionary<int, List<Connection>>();
-        }
-
-        public NEAT(int sensorCount, int outputCount)
+        public Genome(int sensorCount, int outputCount)
         {
             SensorCount = sensorCount;
             OutputCount = outputCount;
@@ -51,6 +45,7 @@ namespace NEAT
 
             Nodes = new List<Node>();
             Connections = new List<Connection>();
+            ParentsSpecies = new List<Species>();
             _reverseLookupTable = new Dictionary<int, List<Connection>>();
 
             for (int i = 0; i < SensorCount; i++)
@@ -60,105 +55,29 @@ namespace NEAT
                 Nodes.Add(new Node(i, NodeType.Output));
         }
 
-        public NEAT(Genus genus) : this(genus.SensorCount, genus.OutputCount) { }
+        public Genome(Genus genus) : this(genus.SensorCount, genus.OutputCount) { }
+        public Genome() : this(0, 0) { }
 
         /// <summary>
-        /// Create a new NEAT with the same Genome.
+        /// Create a new Genome with the same genes.
         /// </summary>
-        public NEAT CopyGenome()
+        public Genome CopyGenes()
         {
-            var newNEAT = new NEAT
+            var newGenome = new Genome
             {
                 SensorCount = SensorCount,
                 OutputCount = OutputCount
             };
 
             foreach (var node in Nodes)
-                newNEAT.Nodes.Add(node);
+                newGenome.Nodes.Add(new Node(node));
 
             foreach (var connection in Connections)
-                newNEAT.Connections.Add(connection);
+                newGenome.Connections.Add(connection);
 
-            newNEAT.RecalculateReverseLookupTable();
+            newGenome.RecalculateReverseLookupTable();
 
-            return newNEAT;
-        }
-
-        public NEAT Crossover(NEAT other)
-        {
-            // TODO move all the innovation/connection mapping and alignment stuff in CompareGenome()
-            //var newConnections = new List<Connection>();
-            //var newNodes = new HashSet<Node>();
-
-            //foreach (var node in Nodes)
-            //    if (node.Type != NodeType.Hidden)
-            //        newNodes.Add(node);
-
-            //var innovationListAll = new SortedSet<int>();
-            //var innovationDictSelf = new Dictionary<int, Connection>();
-            //var innovationDictOther = new Dictionary<int, Connection>();
-
-            //int maxInnovSelf = -1;
-            //int maxInnovOther = -1;
-
-            //foreach (var connection in Connections)
-            //{
-            //    innovationListAll.Add(connection.Innovation);
-            //    innovationDictSelf.Add(connection.Innovation, connection);
-            //    if (connection.Innovation > maxInnovSelf)
-            //        maxInnovSelf = connection.Innovation;
-            //}
-
-            //foreach (var connection in other.Connections)
-            //{
-            //    innovationListAll.Add(connection.Innovation);
-            //    innovationDictOther.Add(connection.Innovation, connection);
-            //    if (connection.Innovation > maxInnovOther)
-            //        maxInnovOther = connection.Innovation;
-            //}
-
-            //// TODO newConnections is populated here
-            //foreach (var innovation in innovationListAll)
-            //{
-            //    if (innovation > maxInnovSelf)
-            //    {
-            //        // TODO excess genes, check fitness
-            //    }
-            //    else if (innovation > maxInnovOther)
-            //    {
-            //        // TODO excess genes, check fitness
-            //    }
-            //    else if (innovationDictSelf.ContainsKey(innovation) && innovationDictOther.ContainsKey(innovation))
-            //    {
-            //        // TODO shared genes, check fitness
-            //    }
-            //    else
-            //    {
-            //        // TODO disjoint genes, check fitness
-            //    }
-            //}
-
-            //// Add hidden nodes to newNodes
-            //foreach (var connection in newConnections)
-            //{
-            //    if (connection.Source.Type == NodeType.Hidden)
-            //        newNodes.Add(connection.Source);
-            //    if (connection.Target.Type == NodeType.Hidden)
-            //        newNodes.Add(connection.Target);
-            //}
-
-            //var newNEAT = new NEAT()
-            //{
-            //    SensorCount = SensorCount,
-            //    OutputCount = OutputCount,
-            //    Nodes = newNodes.ToList(),
-            //    Connections = newConnections
-            //};
-
-            //newNEAT.RecalculateReverseLookupTable();
-            //return newNEAT;
-
-            throw new NotImplementedException();
+            return newGenome;
         }
 
         #endregion
@@ -187,10 +106,107 @@ namespace NEAT
             }
         }
 
-        public GenomeComparisonResult CompareGenome(NEAT other)
+        public GenomeComparisonResult CompareGenes(Genome other)
         {
-            // TODO go through both genomes and fill a new GenomeComparisonResult
-            throw new NotImplementedException();
+            var results = new GenomeComparisonResult();
+
+            var innovationListAll = new SortedSet<int>();
+
+            int maxInnovSelf = -1;
+            int maxInnovOther = -1;
+
+            foreach (var connection in Connections)
+            {
+                innovationListAll.Add(connection.Innovation);
+                results.InnovationConnectionLookupA.Add(connection.Innovation, connection);
+                if (connection.Innovation > maxInnovSelf)
+                    maxInnovSelf = connection.Innovation;
+            }
+
+            foreach (var connection in other.Connections)
+            {
+                innovationListAll.Add(connection.Innovation);
+                results.InnovationConnectionLookupB.Add(connection.Innovation, connection);
+                if (connection.Innovation > maxInnovOther)
+                    maxInnovOther = connection.Innovation;
+            }
+
+            foreach (var innovation in innovationListAll)
+            {
+                if (innovation > maxInnovSelf || innovation > maxInnovOther)
+                    results.ExcessInnovations.Add(innovation);
+                else if (results.InnovationConnectionLookupA.ContainsKey(innovation) && results.InnovationConnectionLookupB.ContainsKey(innovation))
+                    results.MatchingInnovations.Add(innovation);
+                else
+                    results.DisjointInnovations.Add(innovation);
+            }
+
+            return results;
+        }
+
+        public Genome Crossover(Random random, Genome other)
+        {
+            var newConnections = new List<Connection>();
+            var newNodes = new HashSet<Node>();
+
+            foreach (var node in Nodes)
+                if (node.Type != NodeType.Hidden)
+                    newNodes.Add(new Node(node));
+
+            var compareResults = CompareGenes(other);
+
+            foreach (var innovation in compareResults.MatchingInnovations)
+            {
+                // Matching genes are taken from either parents randomly
+                var potentialGeneA = compareResults.InnovationConnectionLookupA[innovation];
+                var potentialGeneB = compareResults.InnovationConnectionLookupB[innovation];
+                newConnections.Add(Util.Choose(random, potentialGeneA, potentialGeneB));
+            }
+
+            foreach (var innovation in compareResults.DisjointInnovations.Concat(compareResults.ExcessInnovations))
+            {
+                // Disjoint and excess genes are taken from the fittest parent, if both parents have the same fitness choose at random for each genes
+                compareResults.InnovationConnectionLookupA.TryGetValue(innovation, out Connection potentialGeneA);
+                compareResults.InnovationConnectionLookupB.TryGetValue(innovation, out Connection potentialGeneB);
+
+                if (Fitness > other.Fitness)
+                {
+                    if (potentialGeneA != null)
+                        newConnections.Add(potentialGeneA);
+                } 
+                else if (Fitness < other.Fitness)
+                {
+                    if (potentialGeneB != null)
+                        newConnections.Add(potentialGeneB);
+                }
+                else
+                {
+                    var connection = potentialGeneA ?? potentialGeneB;
+                    if (random.NextDouble() < 0.5)
+                        newConnections.Add(connection);
+                }
+            }
+
+            // Add hidden nodes to newNodes
+            foreach (var connection in newConnections)
+            {
+                if (connection.Source.Type == NodeType.Hidden)
+                    newNodes.Add(new Node(connection.Source));
+                if (connection.Target.Type == NodeType.Hidden)
+                    newNodes.Add(new Node(connection.Target));
+            }
+
+            newConnections.Sort((c1, c2) => c1.Innovation.CompareTo(c2.Innovation));
+            var newGenome = new Genome()
+            {
+                SensorCount = SensorCount,
+                OutputCount = OutputCount,
+                Nodes = newNodes.ToList(),
+                Connections = newConnections
+            };
+
+            newGenome.RecalculateReverseLookupTable();
+            return newGenome;
         }
 
         #endregion
@@ -306,6 +322,7 @@ namespace NEAT
         public void MutateWeights(Random random)
         {
             // TODO go through all connections and either don't touch them, do a MutateShiftWeight(), or MutateNewWeight()
+            throw new NotImplementedException();
         }
 
         public void MutateNewWeight(Random random, Connection connection = null)
@@ -313,7 +330,7 @@ namespace NEAT
             if (connection == null)
                 connection = Connections[random.Next(Connections.Count)];
 
-            // TODO use gaussian distribution
+            // TODO use gaussian distribution?
             var weight = random.NextDouble() * MaxWeight * 2.0 - MaxWeight;
             connection.Weight = weight;
         }
@@ -323,7 +340,7 @@ namespace NEAT
             if (connection == null)
                 connection = Connections[random.Next(Connections.Count)];
 
-            // TODO use gaussian distribution
+            // TODO use gaussian distribution?
             var weightShift = random.NextDouble() * MaxWeightShift * 2.0 - MaxWeightShift;
             var newWeight = Math.Clamp(connection.Weight + weightShift, -MaxWeight, MaxWeight);
             connection.Weight = newWeight;
@@ -339,18 +356,6 @@ namespace NEAT
         /// <returns><c>true</c> if activation was possible, <c>false</c> if no valid connections between sensors and outputs.</returns>
         public bool Activate()
         {
-            //if (Connections.Count <= 0)
-            //    return;
-
-            //// Hidden layer first
-            //// This works because connections between hidden nodes can only be source_id < target_id
-            //for (int i = SensorCount + OutputCount; i < Nodes.Count; i++)
-            //    Nodes[i].Value = ComputeNode(i);
-
-            //// Output layer second
-            //for (int i = SensorCount; i < SensorCount + OutputCount; i++)
-            //    Nodes[i].Value = ComputeNode(i);
-
             var activateTries = 0;
             var alreadyActivated = false;
             while (!AtLeastOneOutputActivated())
@@ -409,17 +414,6 @@ namespace NEAT
                 _reverseLookupTable.Add(currentNode.ID, currentNodeConnections);
             }
         }
-
-        //private double ComputeNode(int nodeIndex)
-        //{
-        //    var currentNode = Nodes[nodeIndex];
-        //    double value = 0.0;
-
-        //    foreach (var connection in _reverseLookupTable[currentNode.ID])
-        //        value += connection.Source.Value * connection.Weight;
-
-        //    return Sigmoid(value);
-        //}
 
         private double Sigmoid(double x)
         {

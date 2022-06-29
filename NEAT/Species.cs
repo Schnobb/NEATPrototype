@@ -14,50 +14,30 @@ namespace NEAT
         public double DeltaThreshold { get; set; } = 4.0;   // between 3.0 and 9.0 in original implementation
 
         public Genus Genus { get; set; }
-        public List<NEAT> Members { get; private set; }
+        public List<Genome> Members { get; private set; }
 
-        public NEAT OriginalNEAT
-        {
-            get
-            {
-                return Members[0];
-            }
-        }
-
-        public double TopFitness
-        {
-            get
-            {
-                return Members.Max(x => x.Fitness);
-            }
-        }
-
-        public double AverageFitness
-        {
-            get
-            {
-                return Members.Average(x => x.Fitness);
-            }
-        }
+        public Genome OriginalGenome { get { return Members[0]; } }
+        public double TopFitness { get { return Members.Max(x => x.Fitness); } }
+        public double AverageFitness { get { return Members.Average(x => x.Fitness); } }
 
         public Species()
         {
-            Members = new List<NEAT>();
+            Members = new List<Genome>();
         }
 
         public Species(Genus genus)
         {
-            Members = new List<NEAT>();
+            Members = new List<Genome>();
             Genus = genus;
         }
 
-        public Species(Genus genus, NEAT neat)
+        public Species(Genus genus, Genome genome)
         {
-            Members = new List<NEAT> { neat };
+            Members = new List<Genome> { genome };
             Genus = genus;
         }
 
-        public bool IsCompatible(NEAT neat)
+        public bool IsCompatible(Genome genome)
         {
             // delta = (c1*E)/N + (c2*D)/N + c3*WAvg
             //      c1, c2, c3 configurable coeficients
@@ -69,7 +49,7 @@ namespace NEAT
 
             // TODO Look into adjusted fitness using species deltas, this is more complex
 
-            var genomeCompareResults = OriginalNEAT.CompareGenome(neat);
+            var genomeCompareResults = OriginalGenome.CompareGenes(genome);
 
             var e = genomeCompareResults.ExcessInnovations.Count();
             var d = genomeCompareResults.DisjointInnovations.Count();
